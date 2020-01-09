@@ -1,4 +1,8 @@
-// package project;
+/*
+*  This is a menu driven program which has the functionality similar to that of a real world
+ *  railway system.
+ *  All the user and train credentials are stored in text-files.
+* */
 
 import java.io.*;
 import java.util.*;
@@ -27,7 +31,6 @@ class Railway {
         }
 
     }
-
 
     // creates random time
     public String createRandomTime() {
@@ -77,7 +80,7 @@ class Railway {
         }
     }
 
-    // Retreats user from text
+    // Retreats users from text
     public void retreatUserFromText() throws IOException {
         System.out.println("Reading from the file");
         // reads from the text file adds to the user list
@@ -102,7 +105,6 @@ class Railway {
     }
 
     // Adds a new user into the existing list of username in a text file
-    // TODO: Add phone number
     public void addUser() throws IOException {
         if (!userRetreated)
             retreatUserFromText();
@@ -118,12 +120,12 @@ class Railway {
     }
 
     // To check whether the user exists or not
-    public boolean exists(String userName) throws IOException {
+    public boolean exists() throws IOException {
         if (!userRetreated)
             retreatUserFromText();
 
         for (String names : user)
-            if (names.equalsIgnoreCase(userName)) {
+            if (names.equalsIgnoreCase(this.userName)) {
                 System.out.println("User exists");
                 return true;
             }
@@ -153,7 +155,6 @@ class Railway {
         writer.close();
     }
 
-    // Checks if the seat number exists
     public boolean seatNumberExists(String credentials) throws IOException {
         if (!credentialsRetreated)
             retreatTrainCredentials();
@@ -171,17 +172,17 @@ class Railway {
     // Booking a ticket for the passenger
     boolean isValidTrain = false;
 
-    public boolean bookTrains(String key, Hashtable<String, ArrayList<String>> trains) throws IOException {// books the
-                                                                                                           // trains
+    public boolean bookTrains(String key, Hashtable<String, ArrayList<String>> trains) throws IOException {
         Scanner sc = new Scanner(System.in);
         System.out.println("Select the trains from the following options and enter the name of the train");
-        // for (int i = 0; i < trains.get(key).length; i++)
-        // System.out.println(trains.get(key)[i]);
         for (int i = 0; i < trains.get(key).size(); i++) {
             System.out.println(trains.get(key).get(i));
         }
+
         String selectedTrain = "";
         System.out.println("Departure time : " + createRandomTime());
+        System.out.println("Arrival time : " + createRandomTime());
+
         // checking the validity of the train that the user has provided.
         while (true) {
             selectedTrain = sc.nextLine();
@@ -201,15 +202,17 @@ class Railway {
         // creating a random seat number
         Random r = new Random();
         int seatNumber = r.nextInt(375) + 1;
+
         String credentials = "Station_" + key.charAt(0) + "-" + "Station_" + key.charAt(1) + "-" + selectedTrain + "-"
                 + Integer.toString(seatNumber);
         while (seatNumberExists(credentials) && seatOccupied != 375)
             seatNumber = r.nextInt(375) + 1;
         if (seatOccupied == 375)
             System.out.println("All seats have been reserved");
-        System.out.println(userName + "Your seatNumber number is" + seatNumber
+        System.out.println(this.userName + "Your seatNumber number is" + seatNumber
                 + "\n Do you want to confirm your booking ? Yes or No");
         boolean confirmed = (sc.nextLine().equalsIgnoreCase("yes")) ? true : false;
+
         if (confirmed) {
             // generate a new booking id by adding 1 to the previous booking id
             if (!credentialsRetreated)
@@ -223,7 +226,7 @@ class Railway {
                 bookingId = 0;
             }
             // updating the credentials with the booking id
-            credentials = userName + "_" + Long.toString(bookingId + 1) + "-" + credentials;
+            credentials = this.userName + "_" + Long.toString(bookingId + 1) + "-" + credentials;
             // add the seatNumber, station name and train name to the text file
             addTrainCredentials(credentials);
         }
@@ -263,12 +266,11 @@ class Railway {
     }
 
     // Cancelling a ticket
-
     public boolean cancelTicket(long bookingID) throws IOException {
         if (!credentialsRetreated)
             retreatTrainCredentials();
         String bookingId = String.valueOf(bookingID);
-        bookingId = userName + "_" + bookingId;
+        bookingId = this.userName + "_" + bookingId;
         System.out.println("Booking id: " + bookingId);
         for (int i = 0; i < trainCredentials.size(); i++) {
             String entries = trainCredentials.get(i);
@@ -284,12 +286,12 @@ class Railway {
         return false;
     }
 
-    // prompt for credentials
+    // asking the users to enter their credentials
     public void promptForCredentials(String condition) throws IOException {
         Scanner sc = new Scanner(System.in);
         System.out.println("Enter the username");
-        userName = sc.next();
-        boolean userExists = exists(userName);
+        this.userName = sc.next();
+        boolean userExists = exists();
         // Check whether the user already exists or not
         if (!userExists && condition.equalsIgnoreCase("Booking")) {
             System.out.println("Enter the phone Number");
@@ -302,7 +304,7 @@ class Railway {
             }
             phBook.add(phNumber);
         } else if (!userExists && condition.equalsIgnoreCase("Cancellation")) {
-            // User request is not valid
+            // User request for cancellation is not valid
             System.out.println("You need to have a booking");
         } else if (userExists && condition.equalsIgnoreCase("Cancellation")) {
             System.out.println("Enter your booking number");
@@ -327,7 +329,7 @@ class Railway {
             case 1:
                 passenger.promptForCredentials("booking");
                 if (passenger.ticketBooking(trains))
-                    if (!passenger.exists(passenger.userName))
+                    if (!passenger.exists())
                         passenger.addUser();
                 break;
             // Cancellation
@@ -345,8 +347,8 @@ class Railway {
                     }
 
                 break;
+            // shows all your bookings
             case 3:
-                System.out.println(System.getProperty("os.name"));
                 passenger.promptForCredentials("Bookings");
                 ArrayList<String> bookings = new ArrayList<>();
                 if ((bookings = passenger.getAllBookings(passenger.userName)).size() != 0) {
